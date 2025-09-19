@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: canary-app
+  namespace: canary-demo
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: canary-app
+  template:
+    metadata:
+      labels:
+        app: canary-app
+    spec:
+      containers:
+        - name: web
+          image: DOCKERHUB_USER/canary-react:latest   # <-- REPLACE this with your image (e.g. "milan/canary-react:latest")
+          ports:
+            - containerPort: 8080
+          env:
+            - name: NODE_ENV
+              value: "production"
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 60 }
+        - setWeight: 30
+        - pause: { duration: 60 }
+        - setWeight: 60
+        - pause: { duration: 60 }
+      analysis:
+        templates:
+          - name: canary-analysis
+            templateName: canary-analysis
+

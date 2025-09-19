@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: canary-analysis
+  namespace: canary-demo
+spec:
+  args: []
+  metrics:
+    - name: error-rate
+      successCondition: result[0].value < 1
+      failureCondition: result[0].value > 5
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            (sum(rate(http_requests_total{job="canary-app",status_code=~"5.."}[1m]))
+            / sum(rate(http_requests_total{job="canary-app"}[1m]))) * 100
+
+    - name: p99-latency-ms
+      successCondition: result[0].value < 200
+      failureCondition: result[0].value > 1000
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="canary-app"}[1m])) by (le)) * 1000
+

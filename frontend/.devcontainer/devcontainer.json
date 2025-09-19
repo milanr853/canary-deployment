@@ -1,0 +1,12 @@
+{
+    "name": "Canary React Dev",
+    "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+    "forwardPorts": [
+        5173
+    ],
+    "postCreateCommand": "npm ci",
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind"
+    ]
+}
