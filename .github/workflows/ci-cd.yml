@@ -35,15 +35,16 @@ jobs:
         run: npm run build
         working-directory: ./frontend
 
-      # 6️⃣ Log in to Docker Hub
+      # ✅ Only build Docker image if frontend build succeeds
       - name: Log in to Docker Hub
+        if: success()
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 7️⃣ Build Docker image and push to Docker Hub
       - name: Build Docker image and push to Docker Hub
+        if: success()
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
@@ -56,25 +57,36 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
 
-      # 8️⃣ Log out Docker (cleanup)
       - name: Log out Docker (cleanup)
+        if: success()
         run: docker logout || true
 
-      # 9️⃣ Update k8s manifests with new image
+      # 6️⃣ Update k8s manifest **only if file exists**
       - name: Update k8s manifests with new image
-        run: | 
-          sed -i "s#image: .*/canary-deployment:.*#image: ${{ secrets.DOCKERHUB_USERNAME }}/canary-deployment:${{ github.sha }}#g" infra/k8s/rollout-canary.yaml
+        if: success()
+        run: |
+          if [ -f infra/k8s/rollout-canary.yml ]; then
+            sed -i "s#image: .*/canary-deployment:.*#image: ${{ secrets.DOCKERHUB_USERNAME }}/canary-deployment:${{ github.sha }}#g" infra/k8s/rollout-canary.yml
+          else
+            echo "Manifest file infra/k8s/rollout-canary.yml not found, skipping sed."
+          fi
 
-      # 🔟 Configure Git for commit & push
+      # 7️⃣ Configure Git
       - name: Configure Git
+        if: success()
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/<YOUR_USERNAME>/canary-deployment.git
 
-      # 1️⃣1️⃣ Commit & push manifest update
+      # 8️⃣ Commit & push manifest update
       - name: Commit & push manifest update
+        if: success()
         run: |
-          git add infra/k8s/rollout-canary.yaml
-          git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes to commit"
-          git push origin master
+          if [ -f infra/k8s/rollout-canary.yml ]; then
+            git add infra/k8s/rollout-canary.yml
+            git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes to commit"
+            git push origin master
+          else
+            echo "No manifest to commit."
+          fi
