@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/milanr853/canary-deployment.git'   # <-- Replace with actual repo URL
-    targetRevision: main                                           # <-- Use "main" or "master"
+    targetRevision: master                                           # <-- Use "main" or "master"
     path: infra/k8s   
   destination:
     server: 'https://kubernetes.default.svc'
