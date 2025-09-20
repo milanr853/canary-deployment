@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: milanr853/canary-deployment:99b9b4994072724267cbef139d03d57809e4aa5d
+          image: milanr853/canary-deployment:0e4429130a6b21081f511fdc42badeb268ce8faf
           ports:
             - containerPort: 8080
           env:
