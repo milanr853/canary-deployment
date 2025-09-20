@@ -18,7 +18,7 @@ jobs:
       - name: Verify GitHub username
         run: |
           EXPECTED_USERNAME="milanr853"
-          REMOTE_URL="https://github.com/milan/canary-deployment.git"
+          REMOTE_URL="https://github.com/milanr853/canary-deployment.git"
           ACTUAL_USERNAME=$(echo $REMOTE_URL | sed -E 's#https://[^/]+/([^/]+)/.*#\1#')
 
           if [ "$ACTUAL_USERNAME" != "$EXPECTED_USERNAME" ]; then
@@ -87,7 +87,7 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/milan/canary-deployment.git
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/milanr853/canary-deployment.git
 
       # 🔟 Commit & push manifest update
       - name: Commit & push manifest update
