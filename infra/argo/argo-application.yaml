@@ -6,12 +6,12 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'GIT_REPOSITORY_URL'    # <-- REPLACE with your repository HTTPS URL
-    targetRevision: HEAD
-    path: 'k8s'
+    repoURL: 'https://github.com/milanr853/canary-deployment.git'   # <-- Replace with actual repo URL
+    targetRevision: main                                           # <-- Use "main" or "master"
+    path: infra/k8s   
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: canary-demo
+    namespace: canary-deployment
   syncPolicy:
     automated:
       prune: true

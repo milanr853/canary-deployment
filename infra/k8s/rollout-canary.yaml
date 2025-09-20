@@ -2,9 +2,9 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: canary-app
-  namespace: canary-demo
+  namespace: canary-deployment
 spec:
-  replicas: 4
+  replicas: 3
   selector:
     matchLabels:
       app: canary-app
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: DOCKERHUB_USER/canary-react:latest   # <-- REPLACE this with your image (e.g. "milan/canary-react:latest")
+          image: milanr853/canary-deployment:sha-PLACEHOLDER   # <-- CI will update with commit SHA
           ports:
             - containerPort: 8080
           env:

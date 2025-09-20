@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: canary-analysis
-  namespace: canary-demo
+  namespace: canary-deployment
 spec:
   args: []
   metrics:
