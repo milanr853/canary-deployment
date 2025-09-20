@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: milanr853/canary-deployment:sha-PLACEHOLDER   # <-- CI will update with commit SHA
+          image: milanr853/canary-deployment:99b9b4994072724267cbef139d03d57809e4aa5d
           ports:
             - containerPort: 8080
           env:
