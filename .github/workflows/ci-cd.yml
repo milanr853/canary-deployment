@@ -77,7 +77,7 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/<YOUR_USERNAME>/canary-deployment.git
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/milanr853/canary-deployment.git
 
       # 8️⃣ Commit & push manifest update
       - name: Commit & push manifest update
