@@ -1,40 +1,48 @@
 name: CI - Build & Push Docker
 
 on:
-  pull_request:
-    branches: [ master ]
   push:
+    branches: [ master ]
+  pull_request:
     branches: [ master ]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
+      # 1️⃣ Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
+      # 3️⃣ Install dependencies
       - name: Install
         run: npm install
         working-directory: ./frontend
 
+      # 4️⃣ (Optional) Run tests
       # - name: Run tests
       #   run: npm run test
+      #   working-directory: ./frontend
 
+      # 5️⃣ Build frontend
       - name: Build frontend
         run: npm run build
         working-directory: ./frontend
 
+      # 6️⃣ Log in to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 7️⃣ Build Docker image and push to Docker Hub
       - name: Build Docker image and push to Docker Hub
         uses: docker/build-push-action@v4
         with:
@@ -48,18 +56,25 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
 
+      # 8️⃣ Log out Docker (cleanup)
       - name: Log out Docker (cleanup)
         run: docker logout || true
-      
+
+      # 9️⃣ Update k8s manifests with new image
       - name: Update k8s manifests with new image
         run: | 
-          sed -i "s#image: ${{ secrets.DOCKERHUB_USERNAME }}/canary-deployment:.*#image: ${{ secrets.DOCKERHUB_USERNAME }}/canary-deployment:${{ github.sha }}#g" infra/k8s/rollout-canary.yml
+          sed -i "s#image: .*/canary-deployment:.*#image: ${{ secrets.DOCKERHUB_USERNAME }}/canary-deployment:${{ github.sha }}#g" infra/apps/rollout-canary.yaml
 
-      - name: Commit & push manifest update
+      # 🔟 Configure Git for commit & push
+      - name: Configure Git
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add infra/k8s/rollout-canary.yml
-          git commit -m "Update image tag to ${{ github.sha }}"
-          git push
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/<YOUR_USERNAME>/canary-deployment.git
 
+      # 1️⃣1️⃣ Commit & push manifest update
+      - name: Commit & push manifest update
+        run: |
+          git add infra/apps/rollout-canary.yaml
+          git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes to commit"
+          git push origin master
