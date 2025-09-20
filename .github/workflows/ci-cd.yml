@@ -14,28 +14,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js
+      # 2️⃣ Strict username check BEFORE anything else
+      - name: Verify GitHub username
+        run: |
+          EXPECTED_USERNAME="milanr853"
+          REMOTE_URL="https://github.com/milan/canary-deployment.git"
+          ACTUAL_USERNAME=$(echo $REMOTE_URL | sed -E 's#https://[^/]+/([^/]+)/.*#\1#')
+
+          if [ "$ACTUAL_USERNAME" != "$EXPECTED_USERNAME" ]; then
+            echo "Error: GitHub username mismatch. Expected '$EXPECTED_USERNAME', got '$ACTUAL_USERNAME'"
+            exit 1
+          fi
+
+      # 3️⃣ Setup Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      # 3️⃣ Install dependencies
+      # 4️⃣ Install dependencies
       - name: Install
         run: npm install
-        working-directory: ./frontend
-
-      # 4️⃣ (Optional) Run tests
-      # - name: Run tests
-      #   run: npm run test
-      #   working-directory: ./frontend
+        working-directory: ./frontend'
 
       # 5️⃣ Build frontend
       - name: Build frontend
         run: npm run build
         working-directory: ./frontend
 
-      # 6️⃣ Build Docker image (no push yet)
+      # 6️⃣ Build Docker image locally (no push)
       - name: Build Docker image
         run: |
           docker build \
@@ -46,8 +53,8 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
 
-      # 7️⃣ Only log in and push if everything above succeeded
-      - name: Log in and push Docker image
+      # 7️⃣ Push Docker image ONLY if all previous steps succeeded
+      - name: Log in to Docker Hub
         if: ${{ success() }}
         uses: docker/login-action@v2
         with:
@@ -64,7 +71,7 @@ jobs:
         if: ${{ success() }}
         run: docker logout || true
 
-      # 8️⃣ Update k8s manifest if exists
+      # 8️⃣ Update k8s manifests
       - name: Update k8s manifests with new image
         if: ${{ success() }}
         run: |
@@ -74,21 +81,7 @@ jobs:
             echo "Manifest file not found, skipping."
           fi
 
-      # 9️⃣ Strict username check before setting remote
-      - name: Verify GitHub username
-        run: |
-          EXPECTED_USERNAME="milanr853"
-          REMOTE_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/milan/canary-deployment.git"
-
-          # Extract username from the URL
-          ACTUAL_USERNAME=$(echo $REMOTE_URL | sed -E 's#https://[^@]+@github.com/([^/]+)/.*#\1#')
-
-          if [ "$ACTUAL_USERNAME" != "$EXPECTED_USERNAME" ]; then
-            echo "Error: GitHub username mismatch. Expected '$EXPECTED_USERNAME', got '$ACTUAL_USERNAME'"
-            exit 1
-          fi
-
-      # 🔟 Configure Git only if username check passes
+      # 9️⃣ Configure Git
       - name: Configure Git
         if: ${{ success() }}
         run: |
@@ -96,7 +89,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/milan/canary-deployment.git
 
-      # 1️⃣1️⃣ Commit & push manifest update
+      # 🔟 Commit & push manifest update
       - name: Commit & push manifest update
         if: ${{ success() }}
         run: |
